@@ -1,24 +1,11 @@
 {
-    "name": "upload",
-    "version": "1.0.0",
-    "description": "一些测试",
-    "author": "wanghuan",
-    "private": true,
-    "scripts": {
-      "dev": "node main.js"
-    },
-    "dependencies": {
-    },
-    "devDependencies": {
-    },
-    "engines": {
-      "node": ">= 8.0.0",
-      "npm": ">= 3.0.0"
-    },
-    "browserslist": [
-      "> 1%",
-      "last 2 versions",
-      "not ie <= 8"
-    ]
-  }
-  
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
