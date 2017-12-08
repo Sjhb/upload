@@ -1,0 +1,24 @@
+{
+    "name": "upload",
+    "version": "1.0.0",
+    "description": "一些测试",
+    "author": "wanghuan",
+    "private": true,
+    "scripts": {
+      "dev": "node main.js"
+    },
+    "dependencies": {
+    },
+    "devDependencies": {
+    },
+    "engines": {
+      "node": ">= 8.0.0",
+      "npm": ">= 3.0.0"
+    },
+    "browserslist": [
+      "> 1%",
+      "last 2 versions",
+      "not ie <= 8"
+    ]
+  }
+  
