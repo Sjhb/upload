@@ -1,0 +1,22 @@
+const HTTP = require('http')
+const PATH = require('path')
+const URL = require('url')
+const server = HTTP.createServer()
+let dispatcher = (req, res) => {
+  if (req.method === 'POST') {
+    req.setEncoding('utf8')
+    req.on('data', (chunk) => {
+      console.log(chunk)
+    })
+    req.on('end', () => {
+      console.log('over')
+    })
+    res.end('haha post')
+  } else {
+    res.end('haha get')
+  }
+}
+server.on('request', dispatcher)
+server.listen(80, () => {
+  console.log('galaxy-server is runing  on port 80')
+})

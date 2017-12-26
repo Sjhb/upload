@@ -4,6 +4,11 @@ const dispatcher = require('./dispatcher')
 
 let server = HTTP.createServer()
 server.on('request', dispatcher)
+<<<<<<< HEAD
 server.listen('80', () => {
   console.log('upload server runing on port 80')
+=======
+server.listen('8009', () => {
+  console.log('upload server runing on port 8009')
+>>>>>>> 完善分发器，增加测试脚本
 })
