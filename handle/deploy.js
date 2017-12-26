@@ -14,4 +14,5 @@ function deploy (data, req, res) {
 }
 
 module.exports = {
+  deploy
 }
