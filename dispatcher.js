@@ -1,7 +1,9 @@
+import { error } from 'util';
+
 const FS = require('fs')
 const URL = require('url')
 const static = require('./static')
-const deploy = require('./handle/deploy')
+const repController = require('./controller/repController')
 
 /**
  * 事件处理模块
@@ -9,19 +11,36 @@ const deploy = require('./handle/deploy')
  * 以名称进行匹配，例如upload匹配的地址就是http://[host]/upload/**，**代表具体的处理程序
  */
 let handles = {
-  deploy
+  hook: repController
 }
 
-// 返回json对象
-function sendResponse (response, code, content, des) {
-  let head = {
-    'Content-Type': 'application/json'
-  }
+/**
+ * 返回json对象
+ *
+ * @param {json} head header头
+ * @param {http.ServerResponse} response ServerResponse对象
+ * @param {Number} code http状态码
+ * @param {Json} content 具体要传输的信息
+ * @param {String} des 描述
+ */
+function sendResponse (head, response, code, content, des) {
+  let resCode
   let msg = {
     description: des,
     content
   }
-  response.writeHead(code, head)
+  let head = {
+    'Content-Type': 'application/json'
+  }
+  for (let item in head) {
+    head[item] = head[item]
+  }
+  if (!Number(code)) {
+    resCode = 200
+  } else {
+    resCode = Math.floor(code)
+  }
+  response.writeHead(resCode, head)
   response.write(JSON.stringify(msg))
   response.end()
 }
@@ -37,10 +56,11 @@ function handleGet (req, res) {
   let url = URL.parse(req.url)
   let pathname = url.pathname
   if ('/favicon.ico' === pathname) {
-    res.writeHead(200, {
-      'Content-Type' : 'image/x-icon'
-    })
-    FS.createReadStream('./static/favicon.ico').pipe(res)
+    // res.writeHead(200, {
+    //   'Content-Type' : 'image/x-icon'
+    // })
+    // FS.createReadStream('./static/favicon.ico').pipe(res)
+    res.end()
   } else if (/^\/static\/[^.]*\.[^\.]*$/.test(pathname)) {
     // 静态资源支持:如/static/**.html格式
     // 取得文件后缀名
@@ -75,10 +95,10 @@ function handleGet (req, res) {
     } catch (err) {
       if (err.code) {
         // 预期的错误
-        sendResponse(res, err.code, err.message, 'error')
+        sendResponse({}, res, err.code, err.message, 'error')
       } else {
         // 非预期的错误
-        sendResponse(res, 500, err, 'system error')
+        sendResponse({}, res, 500, err, 'system error')
       }
     }
   }
@@ -120,7 +140,7 @@ function handelPost (req, res) {
 }
 
 // 分发器
-function  dispatcher (req, res) {
+function dispatcher (req, res) {
   if (req.method === 'GET') {
     // get请求处理
     handleGet(req, res)
