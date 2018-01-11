@@ -18,16 +18,7 @@ async function cloneRep (payload, cwd) {
     }
   }
   let cloneProcess = null
-  let clone = new Promise((resolve, reject) => {
-    cloneProcess = cp.exec('git clone', [url], option, (err, stdout, stdin) => {
-      if (err) {
-        reject(err)
-      }
-      let out = stdout
-      process.exit()
-      resolve(out)
-    })
-  })
+  let clone = execFile('../shells/createrep.sh', {})
   let res = null
   try {
     res = await clone
