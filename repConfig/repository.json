@@ -1,1 +1,1 @@
-{}
+{"test-auto-deploy":{"name":"test-auto-deploy","sshUrl":"git@github.com:Sjhb/test-auto-deploy.git","deploy":{"bucket":"","operator":"","remotePath":""},"preDeploy":{"bucket":"","operator":"","remotePath":""}}}

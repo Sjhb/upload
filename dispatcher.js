@@ -1,9 +1,8 @@
-import { error } from 'util';
-
 const FS = require('fs')
 const URL = require('url')
-const static = require('./static')
-const repController = require('./controller/repController')
+const repHook = require('./controller/repHookController')
+const repConfig = require('./controller/repConfigController')
+const responseService = require('./service/responseService')
 
 /**
  * 事件处理模块
@@ -11,38 +10,8 @@ const repController = require('./controller/repController')
  * 以名称进行匹配，例如upload匹配的地址就是http://[host]/upload/**，**代表具体的处理程序
  */
 let handles = {
-  hook: repController
-}
-
-/**
- * 返回json对象
- *
- * @param {json} head header头
- * @param {http.ServerResponse} response ServerResponse对象
- * @param {Number} code http状态码
- * @param {Json} content 具体要传输的信息
- * @param {String} des 描述
- */
-function sendResponse (head, response, code, content, des) {
-  let resCode
-  let msg = {
-    description: des,
-    content
-  }
-  let head = {
-    'Content-Type': 'application/json'
-  }
-  for (let item in head) {
-    head[item] = head[item]
-  }
-  if (!Number(code)) {
-    resCode = 200
-  } else {
-    resCode = Math.floor(code)
-  }
-  response.writeHead(resCode, head)
-  response.write(JSON.stringify(msg))
-  response.end()
+  hook: repHook,
+  repConfig: repConfig
 }
 
 /**
@@ -56,10 +25,8 @@ function handleGet (req, res) {
   let url = URL.parse(req.url)
   let pathname = url.pathname
   if ('/favicon.ico' === pathname) {
-    // res.writeHead(200, {
-    //   'Content-Type' : 'image/x-icon'
-    // })
-    // FS.createReadStream('./static/favicon.ico').pipe(res)
+    res.writeHead(200)
+    FS.createReadStream('./static/favicon.ico').pipe(res)
     res.end()
   } else if (/^\/static\/[^.]*\.[^\.]*$/.test(pathname)) {
     // 静态资源支持:如/static/**.html格式
@@ -91,14 +58,14 @@ function handleGet (req, res) {
     let query = url.query
     try {
       let func = handles[reqHand[0]]
-      func[reqHand[1]](query, req, res)
+      func[reqHand[1]](req, res, query)
     } catch (err) {
       if (err.code) {
         // 预期的错误
-        sendResponse({}, res, err.code, err.message, 'error')
+        responseService.sendJsonResponse({}, res, err.code, err.message, 'error')
       } else {
         // 非预期的错误
-        sendResponse({}, res, 500, err, 'system error')
+        responseService.sendJsonResponse({}, res, 500, err.message, 'system error')
       }
     }
   }
@@ -123,19 +90,19 @@ function handelPost (req, res) {
     let reqHand = pathname.match(/([^\/]+)/g)
     try {
       let func = handles[reqHand[0]]
-      func[reqHand[1]](data, req, res)
+      func[reqHand[1]](req, res, data)
     } catch (err) {
       if (err.code) {
         // 预期的错误
-        sendResponse(res, err.code, err.message, 'error')
+        responseService.sendJsonResponse({}, res, err.code, err.message, 'error')
       } else {
         // 非预期的错误
-        sendResponse(res, 500, err, 'system error')
+        responseService.sendJsonResponse({}, res, 500, err.message, 'system error')
       }
     }
   })
   req.on('error', (err) => {
-    sendResponse(res, '500', err.message, 'error')
+    responseService.sendJsonResponse(res, '500', err.message, 'error')
   })
 }
 
