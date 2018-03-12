@@ -1,1 +1,1 @@
-{"test-auto-deploy":{"name":"test-auto-deploy","sshUrl":"git@github.com:Sjhb/test-auto-deploy.git","deploy":{"bucket":"","operator":"","remotePath":""},"preDeploy":{"bucket":"","operator":"","remotePath":""}}}
+{"test-auto-deploy":{"name":"test-auto-deploy","sshUrl":"git@github.com:Sjhb/test-auto-deploy.git","deploy":{"bucket":"nb-static","operator":"whmanlin","password":"whmanlin","remotePath":""},"preDeploy":{"bucket":"nb-static-pre","operator":"whmanlin","password":"whmanlin","remotePath":""}}}

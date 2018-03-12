@@ -2,7 +2,6 @@ const fs = require('fs')
 const path = require('path')
 
 const responseService = require(path.resolve(__dirname, '..', 'service', 'responseService'))
-let repConfig = require(path.resolve(__dirname, '..', 'repConfig', 'repository.json'))
 /**
  * 获取当前仓库的配置
  *
@@ -10,6 +9,8 @@ let repConfig = require(path.resolve(__dirname, '..', 'repConfig', 'repository.j
  * @param {http.ServerResponse} res
  */
 function getAllConfig (req, res, data) {
+  let repConfig = fs.readFileSync(path.resolve(__dirname, '..', 'repConfig', 'repository.json'))
+  repConfig = JSON.parse(repConfig)
   responseService.sendJsonResponse({'Access-Control-Allow-Origin':'*'}, res, 200, repConfig, 'success')
 }
 /**
@@ -20,12 +21,23 @@ function getAllConfig (req, res, data) {
  * @param {http.ServerResponse} res
  */
 function configRep (req, res, data) {
-  const reqData = JSON.parse(data)
-  if (!reqData.repName) {
+  if (!data) {
+    responseService.sendJsonResponse({}, res, 400, '请传递参数', 'error')
+    return
+  }
+  let repConfig = fs.readFileSync(path.resolve(__dirname, '..', 'repConfig', 'repository.json'))
+  repConfig = JSON.parse(repConfig.toString())
+  let reqData = null
+  if (Buffer.isBuffer(data)) {
+    reqData = JSON.parse(data.toString())
+  } else {
+    reqData = JSON.parse(data)
+  }
+  if (!reqData.name) {
     responseService.sendJsonResponse({}, res, 200, '请指定项目', 'warning')
     return
   }
-  let tarRepConfig = repConfig[reqData.repName]
+  let tarRepConfig = repConfig[reqData.name]
   if (!tarRepConfig) {
     responseService.sendJsonResponse({}, res, 200, '未找到指定项目', 'warning')
     return
@@ -40,7 +52,8 @@ function configRep (req, res, data) {
   tarRepConfig.preDeploy.password = reqData.preDeploy.password.trim() ? reqData.preDeploy.password.trim() : ''
   tarRepConfig.preDeploy.remotePath = reqData.preDeploy.remotePath.trim() ? reqData.preDeploy.remotePath.trim() : ''
 
-  repConfig[reqData.repName] = tarRepConfig
+  repConfig[reqData.name] = tarRepConfig
+  fs.writeFileSync(path.resolve(__dirname, '..', 'repConfig', 'repository.json'), JSON.stringify(repConfig))
   responseService.sendJsonResponse({'Access-Control-Allow-Origin':'*'}, res, 200, '操作成功', 'success')
 }
 

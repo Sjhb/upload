@@ -6,11 +6,16 @@ const shellService = require(path.resolve(__dirname, '..', 'service', 'shellServ
 const responseService = require('../service/responseService')
 const uploadService = require('../service/uploadService')
 // 绝对路径
-const repositories = require(path.resolve(__dirname, '..', 'repConfig', 'repository.json'))
 const repSpacePath = path.resolve(__dirname, '..', 'repositories')
 // promise 方法
 const appendFile = util.promisify(fs.appendFile)
 const writeFile = util.promisify(fs.writeFile)
+
+// 获取仓库配置信息
+function getRepConfig () {
+  const repositories = fs.readFileSync(path.resolve(__dirname, '..', 'repConfig', 'repository.json')).toString()
+  return JSON.parse(repositories)
+}
 
 /**
  * 根据git仓库传过来的数据构造出仓库的信息
@@ -33,7 +38,7 @@ const writeFile = util.promisify(fs.writeFile)
 function constructPayload (payloadStr) {
   const payload = JSON.parse(payloadStr)
   let config = {
-    repName: payload.repository.name,
+    name: payload.repository.name,
     created: payload.created,
     deleted: payload.deleted,
     forced: payload.forced,
@@ -63,16 +68,17 @@ function deploy (req, res, data) {
   // 只处理master分支和release分支上的操作
   if (/release/.test(payload.ref)) {
     const repConfig = constructPayload(data)
-    if (repositories[repConfig.repName]) {
-      preDeployRep(req, res, repConfig, path.resolve(repSpacePath, repConfig.repName), repConfig.branch)
+    const repositories = getRepConfig()
+    if (repositories[repConfig.name]) {
+      preDeployRep(req, res, repConfig, path.resolve(repSpacePath, repConfig.name), repConfig.branch)
     } else {
       createRep(req, res, repConfig, repSpacePath, repConfig.branch)
     }
   } else if (/master/.test(payload.ref)) {
     const repConfig = constructPayload(data)
-    if (repositories[repConfig.repName]) {
+    if (repositories[repConfig.name]) {
       // 更新本地项目
-      deployRep(req, res, repConfig, path.resolve(repSpacePath, repConfig.repName), repConfig.branch)
+      deployRep(req, res, repConfig, path.resolve(repSpacePath, repConfig.name), repConfig.branch)
     } else {
       // 本地没有项目拉取新项目
       createRep(req, res, repConfig, repSpacePath)
@@ -94,6 +100,7 @@ function deploy (req, res, data) {
  */
 async function deployRep (req, res, repConfig, repPath, branch) {
   const tarBranch = branch.trim()
+  const repositories = getRepConfig()
   try {
     if (!tarBranch) {
       throw '请指定分支'
@@ -105,20 +112,20 @@ async function deployRep (req, res, repConfig, repPath, branch) {
     await shellService.gitPull(repPath)
     await shellService.installNpmPackage(repPath, repDetail.name)
     let buildRes = await shellService.runCommand('npm run build', repPath)
-    await appendFile(path.resolve(__dirname, '..', 'log', `${repConfig.repName}.log`), '\n-------------\n')
-    await appendFile(path.resolve(__dirname, '..', 'log', `${repConfig.repName}.log`), buildRes.stdout)
-    await appendFile(path.resolve(__dirname, '..', 'log', `${repConfig.repName}.log`), buildRes.stderr)
-    let repo = repositories[repConfig.repName]
+    await appendFile(path.resolve(__dirname, '..', 'log', `${repConfig.name}.log`), '\n-------------\n')
+    await appendFile(path.resolve(__dirname, '..', 'log', `${repConfig.name}.log`), buildRes.stdout)
+    await appendFile(path.resolve(__dirname, '..', 'log', `${repConfig.name}.log`), buildRes.stderr)
+    let repo = repositories[repConfig.name]
     let uploader = new uploadService.uploader(repo.deploy.bucket, repo.deploy.operater, repo.deploy.password)
     uploader.findAllFile(path.resolve(repPath, 'dist'), '')
     uploader.fileList = uploader.fileList.reverse()
     for (let i = 0; i < uploader.fileList.length; i++) {
       let file = uploader.fileList[i]
       await uploader.uploadFile(file.filePath, file.remotePath)
-      await appendFile(path.resolve(__dirname, '..', 'log', `${repConfig.repName}.log`), `${file.remotePath}上传完成`)
+      await appendFile(path.resolve(__dirname, '..', 'log', `${repConfig.name}.log`), `${file.remotePath}上传完成`)
     }
   } catch(err) {
-    await appendFile(path.resolve(__dirname, '..', 'log', `${repConfig.repName}.log`), err.message)
+    await appendFile(path.resolve(__dirname, '..', 'log', `${repConfig.name}.log`), err.message)
     responseService.sendJsonResponse({}, res, 500, `${err.message}`, 'system error')
     return
   }
@@ -137,6 +144,7 @@ async function deployRep (req, res, repConfig, repPath, branch) {
  */
 async function preDeployRep (req, res, repConfig, repPath, branch) {
   const tarBranch = branch.trim()
+  const repositories = getRepConfig()
   try {
     if (!tarBranch) {
       throw '请指定分支'
@@ -161,14 +169,14 @@ async function preDeployRep (req, res, repConfig, repPath, branch) {
     let prebuildRes = await shellService.runCommand('npm run prebuild', repPath)
     await appendFile(path.resolve(__dirname, '..', 'log', `${repConfig.name}-pre.log`), prebuildRes.stdout)
     await appendFile(path.resolve(__dirname, '..', 'log', `${repConfig.name}-pre.log`), prebuildRes.stderr)
-    let repo = repositories[repConfig.repName]
+    let repo = repositories[repConfig.name]
     let uploader = new uploadService.uploader(repo.preDeploy.bucket, repo.repo.preDeploy.operater, repo.repo.preDeploy.password)
     uploader.findAllFile(path.resolve(repPath, 'dist'), repo.preDeploy.remotePath)
     uploader.fileList = uploader.fileList.reverse()
     for (let i = 0; i < uploader.fileList.length; i++) {
       let file = uploader.fileList[i]
       await uploader.uploadFile(file.filePath, file.remotePath)
-      await appendFile(path.resolve(__dirname, '..', 'log', `${repConfig.repName}-pre.log`), `${file.remotePath}上传完成`)
+      await appendFile(path.resolve(__dirname, '..', 'log', `${repConfig.name}-pre.log`), `${file.remotePath}上传完成`)
     }
   } catch(err) {
     await appendFile(path.resolve(__dirname, '..', 'log', `${repConfig.name}-pre.log`, `${err.message}`), `${err.message}`)
@@ -188,17 +196,20 @@ async function preDeployRep (req, res, repConfig, repPath, branch) {
  * @param {String} newBranch 要跟踪并检出的远程分支
  */
 async function createRep (req, res, repo, repPath, newBranch) {
+  const repositories = getRepConfig()
   const repDetail = {
-    name: repo.repName,
+    name: repo.name,
     sshUrl: repo.repSshUrl,
     deploy: {
       bucket: '',
       operator: '',
+      password: '',
       remotePath:''
     },
     preDeploy: {
       bucket: '',
       operator: '',
+      password: '',
       remotePath:''
     }
   }
@@ -209,7 +220,7 @@ async function createRep (req, res, repo, repPath, newBranch) {
     cloneRes = await shellService.cloneRep(repo.repSshUrl, repPath)
     // 检出新分支（如果需要的话）
     if (newBranch) {
-      checkBranchRes = await shellService.trackNewBranch(path.resolve(repPath, repo.repName), repo.branch)
+      checkBranchRes = await shellService.trackNewBranch(path.resolve(repPath, repo.name), repo.branch)
     }
     // 执行npm包安装命令
     npmInstallRes = await shellService.installNpmPackage(path.resolve(repPath, repDetail.name))
