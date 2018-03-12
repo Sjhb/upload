@@ -5,7 +5,6 @@ node_modules/
 log/
 package-lock.json
 repositories/
-repConfig/repository.json
 **／**／node_modules/
 **/**/.vscode/
 **/**/.idea/
