@@ -65,6 +65,7 @@ function constructPayload (payloadStr) {
  */
 function deploy (req, res, data) {
   const payload = JSON.parse(data)
+  const repositories = getRepConfig()
   // 只处理master分支和release分支上的操作
   if (/release/.test(payload.ref)) {
     const repConfig = constructPayload(data)
@@ -81,7 +82,7 @@ function deploy (req, res, data) {
       deployRep(req, res, repConfig, path.resolve(repSpacePath, repConfig.name), repConfig.branch)
     } else {
       // 本地没有项目拉取新项目
-      createRep(req, res, repConfig, repSpacePath)
+      createRep(req, res, repConfig, repSpacePath, 'master')
     }
   } else {
     res.writeHead(200)
@@ -110,13 +111,12 @@ async function deployRep (req, res, repConfig, repPath, branch) {
     // 检出到目标分支并pull
     await shellService.checkoutBranch(repPath, tarBranch)
     await shellService.gitPull(repPath)
-    await shellService.installNpmPackage(repPath, repDetail.name)
     let buildRes = await shellService.runCommand('npm run build', repPath)
-    await appendFile(path.resolve(__dirname, '..', 'log', `${repConfig.name}.log`), '\n-------------\n')
+    await appendFile(path.resolve(__dirname, '..', 'log', `${repConfig.name}.log`), '\n--------------------------\n')
     await appendFile(path.resolve(__dirname, '..', 'log', `${repConfig.name}.log`), buildRes.stdout)
     await appendFile(path.resolve(__dirname, '..', 'log', `${repConfig.name}.log`), buildRes.stderr)
     let repo = repositories[repConfig.name]
-    let uploader = new uploadService.uploader(repo.deploy.bucket, repo.deploy.operater, repo.deploy.password)
+    let uploader = new uploadService.uploader(repo.deploy.bucket, repo.deploy.operator, repo.deploy.password)
     uploader.findAllFile(path.resolve(repPath, 'dist'), '')
     uploader.fileList = uploader.fileList.reverse()
     for (let i = 0; i < uploader.fileList.length; i++) {
@@ -124,6 +124,7 @@ async function deployRep (req, res, repConfig, repPath, branch) {
       await uploader.uploadFile(file.filePath, file.remotePath)
       await appendFile(path.resolve(__dirname, '..', 'log', `${repConfig.name}.log`), `${file.remotePath}上传完成`)
     }
+    await writeFile(path.resolve(__dirname, '..', 'log', `${repConfig.name}-deploy.log`), `线上版本：【Commit号】${repConfig.commitId}【时间】:${new Date()}【分支】${repConfig.branch}`)
   } catch(err) {
     await appendFile(path.resolve(__dirname, '..', 'log', `${repConfig.name}.log`), err.message)
     responseService.sendJsonResponse({}, res, 500, `${err.message}`, 'system error')
@@ -164,13 +165,12 @@ async function preDeployRep (req, res, repConfig, repPath, branch) {
       await shellService.checkoutBranch(repPath, tarBranch)
       await shellService.gitPull(repPath)
     }
-    // 执行打包命令
-    await shellService.installNpmPackage(repPath, repDetail.name)
     let prebuildRes = await shellService.runCommand('npm run prebuild', repPath)
+    await appendFile(path.resolve(__dirname, '..', 'log', `${repConfig.name}-pre.log`), '\n--------------------------\n')
     await appendFile(path.resolve(__dirname, '..', 'log', `${repConfig.name}-pre.log`), prebuildRes.stdout)
     await appendFile(path.resolve(__dirname, '..', 'log', `${repConfig.name}-pre.log`), prebuildRes.stderr)
     let repo = repositories[repConfig.name]
-    let uploader = new uploadService.uploader(repo.preDeploy.bucket, repo.repo.preDeploy.operater, repo.repo.preDeploy.password)
+    let uploader = new uploadService.uploader(repo.preDeploy.bucket, repo.preDeploy.operator, repo.preDeploy.password)
     uploader.findAllFile(path.resolve(repPath, 'dist'), repo.preDeploy.remotePath)
     uploader.fileList = uploader.fileList.reverse()
     for (let i = 0; i < uploader.fileList.length; i++) {
@@ -178,6 +178,7 @@ async function preDeployRep (req, res, repConfig, repPath, branch) {
       await uploader.uploadFile(file.filePath, file.remotePath)
       await appendFile(path.resolve(__dirname, '..', 'log', `${repConfig.name}-pre.log`), `${file.remotePath}上传完成`)
     }
+    await writeFile(path.resolve(__dirname, '..', 'log', `${repConfig.name}-pre-deploy.log`), `线上版本：【Commit号】${repConfig.commitId}【时间】:${new Date()}【分支】${repConfig.branch}`)
   } catch(err) {
     await appendFile(path.resolve(__dirname, '..', 'log', `${repConfig.name}-pre.log`, `${err.message}`), `${err.message}`)
     responseService.sendJsonResponse({}, res, 500, `${err.message}`, 'system error')
@@ -234,6 +235,9 @@ async function createRep (req, res, repo, repPath, newBranch) {
     checkBranchRes ? await appendFile(path.resolve(__dirname, '..', 'log', `${repDetail.name}.log`), checkBranchRes.stderr) : ''
     await appendFile(path.resolve(__dirname, '..', 'log', `${repDetail.name}.log`), npmInstallRes.stdout)
     await appendFile(path.resolve(__dirname, '..', 'log', `${repDetail.name}.log`), npmInstallRes.stderr)
+    // 发布日志文件
+    await writeFile(path.resolve(__dirname, '..', 'log', `${repDetail.name}-deploy.log`),'')
+    await writeFile(path.resolve(__dirname, '..', 'log', `${repDetail.name}-pre-deploy.log`),'')
   } catch (err) {
     responseService.sendJsonResponse({}, res, 500, `${err.message}`, 'system error')
     return

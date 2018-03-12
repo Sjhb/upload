@@ -256,7 +256,7 @@ async function deployRep (req, res, repConfig, repPath, branch) {
     // ......
     // 加载配置并执行上传命令
     let repo = repositories[repConfig.repName]
-    let uploader = new uploadService.uploader('', repo.deploy.bucket, repo.deploy.operater, repo.deploy.password)
+    let uploader = new uploadService.uploader('', repo.deploy.bucket, repo.deploy.operator, repo.deploy.password)
     uploader.findAllFile(path.resolve(repPath, 'dist'), '')
     uploader.fileList = uploader.fileList.reverse()
     for (let i = 0; i < uploader.fileList.length; i++) {

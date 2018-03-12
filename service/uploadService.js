@@ -5,6 +5,9 @@ const upyun = require('upyun')
 module.exports.uploader = class {
   // 构造方法，利用又拍云提供的SDK构造上传工具
   constructor(bucket, operator, password) {
+    this.operator = operator
+    this.bucket = bucket
+    this.password = password
     this.service = new upyun.Service(bucket, operator, password)
     this.client = new upyun.Client(this.service)
     this.fileList = []

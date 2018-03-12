@@ -2,6 +2,17 @@ const fs = require('fs')
 const path = require('path')
 
 const responseService = require(path.resolve(__dirname, '..', 'service', 'responseService'))
+
+// 查看发布历史
+function getDeployLog (repName) {
+  let preLog = fs.readFileSync(path.resolve(__dirname, '..', 'log', `${repName}-pre-deploy.log`))
+  let prodLog = fs.readFileSync(path.resolve(__dirname, '..', 'log', `${repName}-deploy.log`))
+  return {
+    preLog,
+    prodLog
+  }
+}
+
 /**
  * 获取当前仓库的配置
  *
@@ -11,6 +22,11 @@ const responseService = require(path.resolve(__dirname, '..', 'service', 'respon
 function getAllConfig (req, res, data) {
   let repConfig = fs.readFileSync(path.resolve(__dirname, '..', 'repConfig', 'repository.json'))
   repConfig = JSON.parse(repConfig)
+  for (let item in repConfig) {
+    let log = getDeployLog(item)
+    repConfig[item].preLog = log.preLog.toString()
+    repConfig[item].prodLog = log.prodLog.toString()
+  }
   responseService.sendJsonResponse({'Access-Control-Allow-Origin':'*'}, res, 200, repConfig, 'success')
 }
 /**

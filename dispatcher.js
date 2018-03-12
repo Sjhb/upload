@@ -24,16 +24,10 @@ function handleGet (req, res) {
   // 数据获取
   let url = URL.parse(req.url)
   let pathname = url.pathname
-  if ('/favicon.ico' === pathname) {
-    res.writeHead(200)
-    FS.createReadStream('./static/favicon.ico').pipe(res)
-    res.end()
-  } else if (/^\/static\/[^.]*\.[^\.]*$/.test(pathname)) {
-    // 静态资源支持:如/static/**.html格式
-    // 取得文件后缀名
-    let ext = pathname.match(/\/static\/.*\.([^.]*)$/)[1]
-    if (['css', 'html', 'js','mp4','jpeg','jpg','mp3'].indexOf(ext) !== -1) {
-      let path = './static/' + pathname.match(/static\/(.*$)/)[1]
+  if (/\.[^.]+$/.test(pathname)) {
+    let ext = pathname.match(/\.([^.]*)$/)[1]
+    if (['css', 'html', 'js','mp4','jpeg','jpg','mp3', 'ico', 'json'].indexOf(ext) !== -1) {
+      let path = './deb-dep/build/' + pathname.match(/^\/(.*$)$/)[1]
       let head = {'Content-Type': {
           'css': 'text/css',
           'js': 'application/javascript',
@@ -42,7 +36,9 @@ function handleGet (req, res) {
           'png': 'image/png',
           'html': 'text/html',
           'mp4': 'video/mp4',
-          'mp3': 'video/mp3'
+          'mp3': 'video/mp3',
+          'json': 'application/javascript',
+          'ico': 'image/x-icon'
         }[ext]
       }
       //需要设置HTTP HEAD

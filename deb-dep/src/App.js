@@ -79,9 +79,11 @@ class OneRep extends Component {
         <input className='btn' type='button' value='变更配置' onClick={this.changeRepConfig}/>
         <OneUpyunConfig configList={this.state.rep.deploy}>
           <p>deployConfig</p>
+          <p>{this.state.rep.prodLog}</p>
         </OneUpyunConfig>
         <OneUpyunConfig configList={this.state.rep.preDeploy}>
           <p>preDeployConfig</p>
+          <p>{this.state.rep.preLog}</p>
         </OneUpyunConfig>
       </li>
     )
