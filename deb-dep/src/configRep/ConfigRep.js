@@ -62,7 +62,7 @@ class OneRep extends Component {
       method: 'POST',
       body: JSON.stringify(this.state.rep)
     }
-    fetch('http://localhost:8001/repConfig/configRep', req).then(response => {
+    fetch(window.__define_url + 'repConfig/configRep', req).then(response => {
       if (response.ok) {
         response.json().then(data => {
           alert(data.content)
@@ -98,7 +98,7 @@ class ConfigRep extends Component {
     }
   }
   componentWillMount () {
-    fetch('http://localhost:8001/repConfig/getAllConfig', { method: 'GET'}).then(response => {
+    fetch(window.__define_url + 'repConfig/getAllConfig', { method: 'GET'}).then(response => {
       if(response.ok) {
         response.json().then(data => {
           const reps = data.content

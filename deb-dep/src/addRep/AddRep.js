@@ -36,7 +36,7 @@ class AddRep extends Component {
         url: this.state.repUrl
       })
     }
-    fetch('http://localhost:8000/repConfig/createRep', req).then(response => {
+    fetch(window.__define_url + 'repConfig/createRep', req).then(response => {
       if (response.ok) {
         response.json().then(data => {
           alert(data.content)
