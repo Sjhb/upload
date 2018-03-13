@@ -1,0 +1,12 @@
+.add-rep-area {
+  display: block;
+  padding: 20px 0px;
+}
+.add-rep-area .input {
+  position: relative;
+  width: 400px;
+  background: #fff;
+  padding: 5px;
+  border-radius: 4px;
+  border: 1px solid #c5c5c5;
+}
