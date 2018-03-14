@@ -1,3 +1,9 @@
+/*
+ * @Author: 王欢
+ * @Date: 2018-03-13 13:56:13
+ * @Last Modified by: 王欢
+ * @Last Modified time: 2018-03-14 19:03:35
+ */
 const fs = require('fs')
 const path = require('path')
 const util = require('util')
@@ -109,13 +115,17 @@ async function createRep (req, res, data) {
       bucket: '',
       operator: '',
       password: '',
-      remotePath:''
+      remotePath:'',
+      onlineCommit: '', // 线上版本
+      localCommit: '' // 本地版本
     },
     preDeploy: {
       bucket: '',
       operator: '',
       password: '',
-      remotePath:''
+      remotePath:'',
+      onlineCommit: '', // 线上版本
+      localCommit: '' // 本地版本
     }
   }
   let cloneRes
@@ -145,8 +155,132 @@ async function createRep (req, res, data) {
   responseService.sendJsonResponse({'Access-Control-Allow-Origin':'*'}, res, 200, `项目${repDetail.name}拉取成功`, 'system error')
 }
 
+/**
+ * 安装依赖包
+ *
+ * @param {http.ClientRequest} req
+ * @param {http.ServerResponse} res
+ * @param {String} data 原始post内容
+ */
+async function runNpmInstall (req, res, data) {
+  const repositories = getRepConfig()
+  let rep = JSON.parse(data)
+  if (!repositories[rep.name]) {
+    responseService.sendJsonResponse({'Access-Control-Allow-Origin':'*'}, res, 404, `未找到该项目`, 'system error')
+    return
+  }
+  let npmInstallRes
+  try {
+    npmInstallRes = await shellService.installNpmPackage(path.resolve(repSpacePath, rep.name))
+  } catch (err) {
+    responseService.sendJsonResponse({'Access-Control-Allow-Origin':'*'}, res, 500, `${err.message}`, 'system error')
+    return
+  }
+  responseService.sendJsonResponse({'Access-Control-Allow-Origin':'*'}, res, 200, `项目${rep.name}依赖安装成功`, 'system error')
+}
+
+/**
+ * 执行打包命令
+ *
+ * @param {http.ClientRequest} req
+ * @param {http.ServerResponse} res
+ * @param {String} data 原始post内容
+ */
+async function deploy (req, res, data) {
+  const tarRep = JSON.parse(data)
+  const repositories = getRepConfig()
+  const repPath = path.resolve(__dirname, '..', 'repositories', tarRep.name)
+  let deploylogFile = ''
+  let logCommitFile = ''
+  let deployConfig = null
+  let commitId = ''
+  let branch = ''
+  if (!repositories[tarRep.name]) {
+    responseService.sendJsonResponse({'Access-Control-Allow-Origin':'*'}, res, 404, `未找到该项目`, 'system error')
+    return
+  }
+  try {
+    let branchRes = await shellService.listBranch(repPath)
+    branch = branchRes.stdout.split('\n').filter(ele => /^\*/.test(ele)? ele : false)[0].match(/([^*]+)/)[1].trim()
+    if ('master' === branch) {
+      deploylogFile = path.resolve(__dirname, '..', 'log', `${tarRep.name}.log`)
+      deployConfig = repositories[tarRep.name].deploy
+      logCommitFile =  path.resolve(__dirname, '..', 'log', `${tarRep.name}-deploy.log`)
+    } else {
+      deploylogFile = path.resolve(__dirname, '..', 'log', `${tarRep.name}-pre.log`)
+      deployConfig = repositories[tarRep.name].preDeploy
+      logCommitFile =  path.resolve(__dirname, '..', 'log', `${tarRep.name}-pre-deploy.log`)
+    }
+    let buildRes = await shellService.runCommand('npm run build', repPath)
+    await appendFile(deploylogFile, '\n--------------------------\n')
+    await appendFile(deploylogFile, buildRes.stdout)
+    await appendFile(deploylogFile, buildRes.stderr)
+    let uploader = new uploadService.uploader(deployConfig.bucket, deployConfig.operator, deployConfig.password)
+    uploader.findAllFile(path.resolve(repPath, 'dist'), '')
+    uploader.fileList = uploader.fileList.reverse()
+    for (let i = 0; i < uploader.fileList.length; i++) {
+      let file = uploader.fileList[i]
+      await uploader.uploadFile(file.filePath, file.remotePath)
+      await appendFile(deploylogFile, `${file.remotePath}上传完成`)
+    }
+    // 更新本地配置文件
+    if ('master' === branch) {
+      commitId = repositories[tarRep.name].deploy.onlineCommit = repositories[tarRep.name].deploy.localCommit
+    } else {
+      commitId = repositories[tarRep.name].preDeploy.onlineCommit = repositories[tarRep.name].preDeploy.localCommit
+    }
+    await writeFile(path.resolve(__dirname, '..', 'repConfig', 'repository.json'), JSON.stringify(repositories))
+    await writeFile(logCommitFile, `线上版本：【Commit号】${commitId}【时间】:${new Date()}【分支】${branch}`)
+  } catch(err) {
+    await appendFile(deploylogFile, err.message)
+    responseService.sendJsonResponse({'Access-Control-Allow-Origin':'*'}, res, 200, `${err.message}`, 'system error')
+    return
+  }
+  responseService.sendJsonResponse({'Access-Control-Allow-Origin':'*'}, res, 200, `上线成功\nCommit号：${commitId}\n时间:${new Date()}\n分支${branch}`, 'upload success')
+}
+/**
+ * 获取当前分支
+ *
+ * @param {http.ClientRequest} req
+ * @param {http.ServerResponse} res
+ * @param {String} data
+ */
+function getCurrentBranch (req, res, data) {
+  const rep = JSON.parse(data)
+  const repositories = getRepConfig()
+  if (!repositories[rep.name]) {
+    responseService.sendJsonResponse({'Access-Control-Allow-Origin':'*'}, res, 404, `未找到该项目`, 'system error')
+    return
+  }
+  shellService.listBranch(path.resolve(__dirname, '..', 'repositories', rep.name)).then(data => {
+    let branch = data.stdout.split('\n').filter(ele => /^\*/.test(ele)? ele : false)[0].match(/([^*]+)/)[1].trim()
+    responseService.sendJsonResponse({'Access-Control-Allow-Origin':'*'}, res, 200, branch, 'success')
+  }).catch(err => {
+    responseService.sendJsonResponse({'Access-Control-Allow-Origin':'*'}, res, 404, err, 'system error')
+  })
+}
+
+/**
+ * 切换分支
+ *
+ * @param {http.ClientRequest} req
+ * @param {http.ServerResponse} res
+ * @param {String} data 原始post内容
+ */
+async function switchBranch (req, res, data) {
+  // const repositories = getRepConfig()
+  // let rep = JSON.parse(data)
+  // if (!repositories[rep.name]) {
+  //   responseService.sendJsonResponse({'Access-Control-Allow-Origin':'*'}, res, 404, `未找到该项目`, 'system error')
+  //   return
+  // }
+}
+
 module.exports = {
   getAllConfig,
   configRep,
-  createRep
+  createRep,
+  getCurrentBranch,
+  deploy,
+  runNpmInstall
 }

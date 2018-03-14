@@ -94,7 +94,7 @@ function listBranch (repository) {
 }
 
 /**
- * 获得仓库的所有git分支
+ * fetch远程长裤
  *
  * @param {String} repository  仓库的绝对地址
  */

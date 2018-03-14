@@ -7,17 +7,22 @@ class SignalItem extends Component {
     this.props.changeValue(this.props.name, e.target.value)
   }
   render () {
-    let configValue = this.props.configValue
+    let comp = null
+    if (this.props.name === 'onlineCommit' || this.props.name === 'localCommit') {
+      comp = <b>{this.props.configValue}</b>
+    } else {
+      comp = <input type='text' placeholder='请输入' value={this.props.configValue} onChange={this.handleInput.bind(this)}/>
+    }
     return (
       <li>
         <b>{this.props.name}：</b>
-        <input type='text' placeholder='请输入' value={configValue} onChange={this.handleInput.bind(this)}/>
+        {comp}
       </li>
     )
   }
 }
 
-// 单独一个又拍云空间配置：空间名、操作员、远程地址
+// 单独一个又拍云空间配置：空间名、操作员、远程地址、线上commit号、本地commit
 class OneUpyunConfig extends Component {
   constructor (props) {
     super(props)
@@ -53,10 +58,33 @@ class OneRep extends Component {
   constructor (props) {
     super(props)
     this.changeRepConfig = this.changeRepConfig.bind(this)
+    this.runNpmInstall = this.runNpmInstall.bind(this)
+    this.runDeploy = this.runDeploy.bind(this)
     this.state = {
       rep: this.props.rep
     }
   }
+  componentWillMount () {
+    // 获取当前仓库的当前分支
+    let req = {
+      method: 'POST',
+      body: JSON.stringify({
+        name: this.state.rep.name
+      })
+    }
+    fetch(window.__define_url + 'repConfig/getCurrentBranch', req).then(response => {
+      if (response.ok) {
+        response.json().then(data => {
+          this.setState({
+            branch: data.content
+          })
+        }).catch(err => alert(err))
+      }
+    }).catch(err => {
+      console.log(err)
+    })
+  }
+  // 变更配置
   changeRepConfig () {
     let req = {
       method: 'POST',
@@ -72,19 +100,57 @@ class OneRep extends Component {
       console.log(err)
     })
   }
+  // 执行安装包命令
+  runNpmInstall () {
+    let req = {
+      method: 'POST',
+      body: JSON.stringify({
+        name: this.state.rep.name
+      })
+    }
+    fetch(window.__define_url + 'repConfig/runNpmInstall', req).then(response => {
+      if (response.ok) {
+        response.json().then(data => {
+          alert(data.content)
+        }).catch(err => alert(err))
+      }
+    }).catch(err => {
+      console.log(err)
+    })
+  }
+  // 执行发布命令
+  runDeploy () {
+    let req = {
+      method: 'POST',
+      body: JSON.stringify({
+        name: this.state.rep.name
+      })
+    }
+    fetch(window.__define_url + 'repConfig/deploy', req).then(response => {
+      if (response.ok) {
+        response.json().then(data => {
+          alert(data.content)
+        }).catch(err => alert(err))
+      }
+    }).catch(err => {
+      console.log(err)
+    })
+  }
   render () {
     return (
       <li className='one-rep'>
-        <h3 className='rep-name'>{this.props.rep.name}:</h3>
+        <h2 className='rep-name'>{this.props.rep.name}:【当前分支:{this.state.branch}】</h2>
         <input className='btn' type='button' value='变更配置' onClick={this.changeRepConfig}/>
+        <input className='btn' type='button' value='安装依赖包' onClick={this.runNpmInstall}/>
+        <input className='btn' type='button' value='根据当前分支发布' onClick={this.runDeploy}/>
         <OneUpyunConfig configList={this.state.rep.deploy}>
-          <p>deployConfig</p>
-          <p>{this.state.rep.prodLog}</p>
+          <h3>deployConfig</h3>
         </OneUpyunConfig>
+        <p style={{color: 'blue'}}>{this.state.rep.prodLog}</p>
         <OneUpyunConfig configList={this.state.rep.preDeploy}>
-          <p>preDeployConfig</p>
-          <p>{this.state.rep.preLog}</p>
+          <h3>preDeployConfig</h3>
         </OneUpyunConfig>
+        <p style={{color: 'blue'}}>{this.state.rep.preLog}</p>
       </li>
     )
   }

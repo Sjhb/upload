@@ -38,11 +38,15 @@ class AddRep extends Component {
     }
     fetch(window.__define_url + 'repConfig/createRep', req).then(response => {
       if (response.ok) {
+        this.setState({
+          loading: false
+        })
         response.json().then(data => {
           alert(data.content)
-          this.setState({
-            loading: true
-          })
+        }).catch(err => alert(err))
+      } else {
+        this.setState({
+          loading: false
         })
       }
     }).catch(err => {
@@ -50,13 +54,13 @@ class AddRep extends Component {
     })
   }
   render () {
-    let loading = this.state.loading ? '<span>请求中......</span>' : ''
+    let loading = this.state.loading ? <span>请求中......</span> : ''
     return (
       <div className='add-rep-area'>
         <form onSubmit={this.submit}>
           <span>仓库名称</span><input className='input' type='text' value={this.state.repName} onChange={this.handleInputRepName} placeholder='请务必保证与代码仓库名称一致'/><br/><br/>
           <span>仓库地址</span><input className='input' type='text' value={this.state.repUrl} onChange={this.handleInputUrl} placeholder='ssh地址'/><br/><br/>
-          <input className='btn' type='submit' value='提交'></input>
+          <input className='btn' type='submit' value='提交'></input><br/><br/>
           {loading}
         </form>
       </div>
