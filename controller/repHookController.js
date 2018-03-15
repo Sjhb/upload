@@ -37,20 +37,36 @@ function getRepConfig () {
  */
 function constructPayload (payloadStr) {
   const payload = JSON.parse(payloadStr)
+  // github
+  // let config = {
+  //   name: payload.repository.name,
+  //   created: payload.created,
+  //   deleted: payload.deleted,
+  //   forced: payload.forced,
+  //   repSshUrl: payload.repository.ssh_url,
+  //   branch: payload.ref.match(/heads\/(.*)$/)[1],
+  //   commitId: payload.head_commit.id,
+  //   commitMsg: payload.head_commit.message,
+  //   commitPerson: payload.head_commit.committer.username,
+  //   changedFiles: {
+  //     added: payload.head_commit.added,
+  //     removed: payload.head_commit.removed,
+  //     modified: payload.head_commit.modified
+  //   }
+  // }
+
+  //gitlab
   let config = {
     name: payload.repository.name,
-    created: payload.created,
-    deleted: payload.deleted,
-    forced: payload.forced,
-    repSshUrl: payload.repository.ssh_url,
+    repSshUrl: payload.repository.git_ssh_url,
     branch: payload.ref.match(/heads\/(.*)$/)[1],
-    commitId: payload.head_commit.id,
-    commitMsg: payload.head_commit.message,
-    commitPerson: payload.head_commit.committer.username,
+    commitId: payload.after,
+    commitMsg: payload.commits[0].message,
+    commitPerson: payload.commits[0].author,
     changedFiles: {
-      added: payload.head_commit.added,
-      removed: payload.head_commit.removed,
-      modified: payload.head_commit.modified
+      added: payload.commits[0].added,
+      removed: payload.commits[0].removed,
+      modified: payload.commits[0].modified
     }
   }
   return config
@@ -64,7 +80,6 @@ function constructPayload (payloadStr) {
  * @param {http.ServerResponse} res
  */
 function deploy (req, res, data) {
-  console.log(data)
   const payload = JSON.parse(data)
   const repositories = getRepConfig()
   // 只处理master分支和release分支上的操作
