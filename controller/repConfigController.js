@@ -2,7 +2,7 @@
  * @Author: 王欢
  * @Date: 2018-03-13 13:56:13
  * @Last Modified by: 王欢
- * @Last Modified time: 2018-03-14 19:03:35
+ * @Last Modified time: 2018-03-15 17:24:39
  */
 const fs = require('fs')
 const path = require('path')
@@ -128,31 +128,34 @@ async function createRep (req, res, data) {
       localCommit: '' // 本地版本
     }
   }
-  let cloneRes
-  let checkBranchRes
-  let npmInstallRes
+  // let cloneRes
+  // let checkBranchRes
+  // let npmInstallRes
   try {
-    cloneRes = await shellService.cloneRep(newRep.url, repSpacePath)
+    // cloneRes = await shellService.cloneRep(newRep.url, repSpacePath)
     // 执行npm包安装命令
-    npmInstallRes = await shellService.installNpmPackage(path.resolve(repSpacePath, newRep.name))
+    // npmInstallRes = await shellService.installNpmPackage(path.resolve(repSpacePath, newRep.name))
     repositories[repDetail.name] = repDetail
     // 写入仓库配置文件
     await writeFile(path.resolve(__dirname, '..', 'repConfig', 'repository.json'), JSON.stringify(repositories))
     // 创建日志文件并写入
-    await appendFile(path.resolve(__dirname, '..', 'log', `${repDetail.name}.log`), cloneRes.stdout)
-    await appendFile(path.resolve(__dirname, '..', 'log', `${repDetail.name}.log`), cloneRes.stderr)
-    checkBranchRes ? await appendFile(path.resolve(__dirname, '..', 'log', `${repDetail.name}.log`), checkBranchRes.stdout) : ''
-    checkBranchRes ? await appendFile(path.resolve(__dirname, '..', 'log', `${repDetail.name}.log`), checkBranchRes.stderr) : ''
-    await appendFile(path.resolve(__dirname, '..', 'log', `${repDetail.name}.log`), npmInstallRes.stdout)
-    await appendFile(path.resolve(__dirname, '..', 'log', `${repDetail.name}.log`), npmInstallRes.stderr)
+    // await appendFile(path.resolve(__dirname, '..', 'log', `${repDetail.name}.log`), cloneRes.stdout)
+    // await appendFile(path.resolve(__dirname, '..', 'log', `${repDetail.name}.log`), cloneRes.stderr)
+    // checkBranchRes ? await appendFile(path.resolve(__dirname, '..', 'log', `${repDetail.name}.log`), checkBranchRes.stdout) : ''
+    // checkBranchRes ? await appendFile(path.resolve(__dirname, '..', 'log', `${repDetail.name}.log`), checkBranchRes.stderr) : ''
+    // await appendFile(path.resolve(__dirname, '..', 'log', `${repDetail.name}.log`), npmInstallRes.stdout)
+    // await appendFile(path.resolve(__dirname, '..', 'log', `${repDetail.name}.log`), npmInstallRes.stderr)
     // 发布日志文件
+    await appendFile(path.resolve(__dirname, '..', 'log', `${repDetail.name}.log`), '  ')
+    await appendFile(path.resolve(__dirname, '..', 'log', `${repDetail.name}.log`), ' ')
+
     await writeFile(path.resolve(__dirname, '..', 'log', `${repDetail.name}-deploy.log`),'')
     await writeFile(path.resolve(__dirname, '..', 'log', `${repDetail.name}-pre-deploy.log`),'')
   } catch (err) {
     responseService.sendJsonResponse({'Access-Control-Allow-Origin':'*'}, res, 500, `${err.message}`, 'system error')
     return
   }
-  responseService.sendJsonResponse({'Access-Control-Allow-Origin':'*'}, res, 200, `项目${repDetail.name}拉取成功`, 'system error')
+  responseService.sendJsonResponse({'Access-Control-Allow-Origin':'*'}, res, 200, `项目${repDetail.name}创建成功`, 'system error')
 }
 
 /**
