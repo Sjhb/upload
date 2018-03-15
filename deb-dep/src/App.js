@@ -8,7 +8,7 @@ import AddRep from './addRep/AddRep'
 class App extends Component {
   componentWillMount () {
     // window.__define_url = 'http://localhost:8000/'
-    window.__define_url = 'http://www.excute.cn/'
+    window.__define_url = 'http://118.31.35.103/'
   }
   render () {
     return (
