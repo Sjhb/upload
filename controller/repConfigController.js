@@ -2,7 +2,7 @@
  * @Author: 王欢
  * @Date: 2018-03-13 13:56:13
  * @Last Modified by: 王欢
- * @Last Modified time: 2018-03-15 17:24:39
+ * @Last Modified time: 2018-03-15 20:16:08
  */
 const fs = require('fs')
 const path = require('path')
@@ -204,17 +204,19 @@ async function deploy (req, res, data) {
   }
   try {
     let branchRes = await shellService.listBranch(repPath)
+    let buildRes = null
     branch = branchRes.stdout.split('\n').filter(ele => /^\*/.test(ele)? ele : false)[0].match(/([^*]+)/)[1].trim()
     if ('master' === branch) {
       deploylogFile = path.resolve(__dirname, '..', 'log', `${tarRep.name}.log`)
       deployConfig = repositories[tarRep.name].deploy
       logCommitFile =  path.resolve(__dirname, '..', 'log', `${tarRep.name}-deploy.log`)
+      buildRes = await shellService.runCommand('npm run opsbuild', repPath)
     } else {
       deploylogFile = path.resolve(__dirname, '..', 'log', `${tarRep.name}-pre.log`)
       deployConfig = repositories[tarRep.name].preDeploy
       logCommitFile =  path.resolve(__dirname, '..', 'log', `${tarRep.name}-pre-deploy.log`)
+      buildRes = await shellService.runCommand('npm run build', repPath)
     }
-    let buildRes = await shellService.runCommand('npm run build', repPath)
     await appendFile(deploylogFile, '\n--------------------------\n')
     await appendFile(deploylogFile, buildRes.stdout)
     await appendFile(deploylogFile, buildRes.stderr)
