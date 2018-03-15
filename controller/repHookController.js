@@ -64,6 +64,7 @@ function constructPayload (payloadStr) {
  * @param {http.ServerResponse} res
  */
 function deploy (req, res, data) {
+  console.log(data)
   const payload = JSON.parse(data)
   const repositories = getRepConfig()
   // 只处理master分支和release分支上的操作
