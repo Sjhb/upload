@@ -1,3 +1,4 @@
+
 import React, { Component } from 'react'
 import {BrowserRouter as Router, Route, Link, Redirect, withRouter } from 'react-router-dom'
 
@@ -7,8 +8,11 @@ import AddRep from './addRep/AddRep'
 
 class App extends Component {
   componentWillMount () {
-    // window.__define_url = 'http://localhost:8000/'
-    window.__define_url = 'http://118.31.35.103:8888/'
+    if (process.env.NODE_ENV === 'production') {
+      window.__define_url = 'http://118.31.35.103:8888/'
+    } else {
+      window.__define_url = 'http://127.0.0.1:8000/'
+    }
   }
   render () {
     return (
