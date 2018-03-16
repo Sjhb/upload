@@ -148,6 +148,7 @@ class OneRep extends Component {
     this.penddingState()
     fetch(window.__define_url + 'repConfig/deploy', req).then(response => {
       this.props.refreshConfig()
+      this.noPendding()
       if (response.ok) {
         response.json().then(data => {
           alert(data.content)
@@ -155,6 +156,7 @@ class OneRep extends Component {
       }
     }).catch(err => {
       this.props.refreshConfig()
+      this.noPendding()
       console.log(err)
     })
   }
