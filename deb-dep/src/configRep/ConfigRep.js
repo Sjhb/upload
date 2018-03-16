@@ -61,8 +61,19 @@ class OneRep extends Component {
     this.runNpmInstall = this.runNpmInstall.bind(this)
     this.runDeploy = this.runDeploy.bind(this)
     this.state = {
-      rep: this.props.rep
+      rep: this.props.rep,
+      pendding: false
     }
+  }
+  penddingState () {
+    this.setState({
+      pendding: true
+    })
+  }
+  noPendding () {
+    this.setState({
+      pendding: false
+    })
   }
   componentWillMount () {
     // 获取当前仓库的当前分支
@@ -90,13 +101,18 @@ class OneRep extends Component {
       method: 'POST',
       body: JSON.stringify(this.state.rep)
     }
+    this.penddingState()
     fetch(window.__define_url + 'repConfig/configRep', req).then(response => {
+      this.noPendding()
       if (response.ok) {
         response.json().then(data => {
           alert(data.content)
-        })
+        }).catch(err => alert(err))
+      } else {
+        alert('rong')
       }
     }).catch(err => {
+      this.noPendding()
       console.log(err)
     })
   }
@@ -108,13 +124,16 @@ class OneRep extends Component {
         name: this.state.rep.name
       })
     }
+    this.penddingState()
     fetch(window.__define_url + 'repConfig/runNpmInstall', req).then(response => {
+      this.noPendding()
       if (response.ok) {
         response.json().then(data => {
           alert(data.content)
         }).catch(err => alert(err))
       }
     }).catch(err => {
+      this.noPendding()
       console.log(err)
     })
   }
@@ -126,20 +145,24 @@ class OneRep extends Component {
         name: this.state.rep.name
       })
     }
+    this.penddingState()
     fetch(window.__define_url + 'repConfig/deploy', req).then(response => {
+      this.props.refreshConfig()
       if (response.ok) {
         response.json().then(data => {
           alert(data.content)
         }).catch(err => alert(err))
       }
     }).catch(err => {
+      this.props.refreshConfig()
       console.log(err)
     })
   }
   render () {
+    let penddingText = this.state.pendding ? <b style={{color:'blue'}}>【请求中】</b> : ''
     return (
       <li className='one-rep'>
-        <h2 className='rep-name'>{this.props.rep.name}:【当前分支:{this.state.branch}】</h2>
+        <h2 className='rep-name'>{this.props.rep.name}:【当前分支:{this.state.branch}】{penddingText}</h2>
         <input className='btn' type='button' value='变更配置' onClick={this.changeRepConfig}/>
         <input className='btn' type='button' value='安装依赖包' onClick={this.runNpmInstall}/>
         <input className='btn' type='button' value='根据当前分支发布' onClick={this.runDeploy}/>
@@ -163,7 +186,7 @@ class ConfigRep extends Component {
       repMap: new Map()
     }
   }
-  componentWillMount () {
+  getAllConfig () {
     fetch(window.__define_url + 'repConfig/getAllConfig', { method: 'GET'}).then(response => {
       if(response.ok) {
         response.json().then(data => {
@@ -181,10 +204,13 @@ class ConfigRep extends Component {
       console.log(err)
     })
   }
+  componentWillMount () {
+    this.getAllConfig()
+  }
   render() {
     let componentList = []
     this.state.repMap.forEach((value, key) => {
-      componentList.push(<OneRep rep={value} key={key}/>)
+      componentList.push(<OneRep rep={value} key={key} refreshConfig={this.getAllConfig.bind(this)}/>)
     })
     return (
       <div className='app-root'>

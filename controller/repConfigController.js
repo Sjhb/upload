@@ -2,7 +2,7 @@
  * @Author: 王欢
  * @Date: 2018-03-13 13:56:13
  * @Last Modified by: 王欢
- * @Last Modified time: 2018-03-15 20:16:08
+ * @Last Modified time: 2018-03-16 10:37:29
  */
 const fs = require('fs')
 const path = require('path')
@@ -210,12 +210,12 @@ async function deploy (req, res, data) {
       deploylogFile = path.resolve(__dirname, '..', 'log', `${tarRep.name}.log`)
       deployConfig = repositories[tarRep.name].deploy
       logCommitFile =  path.resolve(__dirname, '..', 'log', `${tarRep.name}-deploy.log`)
-      buildRes = await shellService.runCommand('npm run opsbuild', repPath)
+      buildRes = await shellService.runCommand('npm run build', repPath)
     } else {
       deploylogFile = path.resolve(__dirname, '..', 'log', `${tarRep.name}-pre.log`)
       deployConfig = repositories[tarRep.name].preDeploy
       logCommitFile =  path.resolve(__dirname, '..', 'log', `${tarRep.name}-pre-deploy.log`)
-      buildRes = await shellService.runCommand('npm run build', repPath)
+      buildRes = await shellService.runCommand('npm run opsbuild', repPath)
     }
     await appendFile(deploylogFile, '\n--------------------------\n')
     await appendFile(deploylogFile, buildRes.stdout)
