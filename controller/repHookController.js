@@ -146,6 +146,7 @@ async function deployRep (req, res, repConfig, repPath, branch) {
       await appendFile(logFile, pullRes.stderr)
     } else {
       // 目标分支不存在=》检出跟踪分支
+      await shellService.gitFetch(repPath)
       let trackRes = await shellService.trackNewBranch(repPath, tarBranch)
       await appendFile(logFile, trackRes.stdout)
       await appendFile(logFile, trackRes.stderr)
