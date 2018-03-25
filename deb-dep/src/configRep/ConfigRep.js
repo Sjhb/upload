@@ -1,5 +1,7 @@
 import React, { Component } from 'react'
+import SideBar from '../sideBar/SideBar'
 import './ConfigRep.css'
+
 
 // 单独一项配置，提供修改功能
 class SignalItem extends Component {
@@ -181,6 +183,7 @@ class OneRep extends Component {
   }
 }
 
+// 组件容器
 class ConfigRep extends Component {
   constructor (props) {
     super(props)
@@ -215,7 +218,8 @@ class ConfigRep extends Component {
       componentList.push(<OneRep rep={value} key={key} refreshConfig={this.getAllConfig.bind(this)}/>)
     })
     return (
-      <div className='app-root'>
+      <div id='config-rep'>
+        <SideBar/>
         <ul>
           {componentList}
         </ul>

@@ -1,0 +1,28 @@
+.util-loading {
+  z-index: 3000;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  right: 0px;
+  bottom: 0px;
+  background: rgba(197, 197, 197, 0.09);
+  overflow: hidden;
+}
+@keyframes inifiteMove {
+  0% {
+    left: -30%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+.util-loading .top-animation {
+  position: absolute;
+  top:0px;
+  display: block;
+  width: 30%;
+  height: 4px;
+  background: #b73b16;
+  border-radius: 2px;
+  animation: inifiteMove 2s linear infinite;
+}

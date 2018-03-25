@@ -1,3 +1,8 @@
+#config-rep {
+  position: relative;
+  width: 100%;
+  display: flex;
+}
 .one-rep {
   padding: 10px 10px;
 }

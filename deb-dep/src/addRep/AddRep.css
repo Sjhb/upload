@@ -1,12 +1,55 @@
-.add-rep-area {
-  display: block;
+#add-rep-area {
+  display: flex;
   padding: 20px 0px;
+  height: 400px;
+  align-items: center;
+  justify-content: center;
 }
-.add-rep-area .input {
+#add-rep-area form {
+  position: relative;
+}
+#add-rep-area .form-item {
+  position: relative;
+  display: block;
+}
+#add-rep-area .form-item .control-label {
+  position: relative;
+  display: inline-block;
+  font-size: 15px;
+  font-weight: 400;
+  width: 80px;
+}
+
+#add-rep-area .form-item .input {
   position: relative;
   width: 400px;
-  background: #fff;
-  padding: 5px;
-  border-radius: 4px;
-  border: 1px solid #c5c5c5;
+  font-size: 15px;
+  font-weight: 400;
+  border: none;
+  /* border-bottom: 2px solid #c5c5c5; */
+  transition: .3s all;
+}
+#add-rep-area .form-item .input-animation-border {
+  position: absolute;
+  display: block;
+  bottom: 0px;
+  right: 400px;
+  width: 0px;
+  height: 2px;
+  background: #4285f4;
+  transition: all .5s;
+}
+
+#add-rep-area .form-item .input-animation-border.active {
+  width: 400px;
+  right: 0px;
+}
+
+#add-rep-area .form-item+.form-item {
+  margin-top: 15px;
+}
+
+#add-rep-area .btn {
+  margin-top: 15px;
+  float: right;
 }

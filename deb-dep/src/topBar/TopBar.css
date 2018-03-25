@@ -1,0 +1,71 @@
+#top-bar {
+  position: fixed;
+  top: 0px;
+  left: 0px;
+  right: 0px;
+  border: none;
+  background: #fff;
+  box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.12);
+  z-index: 100;
+  /* transition: background .15s ease,top .4s ease; */
+}
+#top-bar nav {
+  position: relative;
+  display: block;
+  margin: 0 auto;
+  border-radius: 0;
+  padding: 15px 10px;
+  height: 64px;
+  border: none;
+  background: #fff;
+  box-sizing: border-box;
+}
+#top-bar nav .clearfix {
+  border-bottom: #f3f3f3;
+  margin: 0 auto;
+  padding: 0;
+  position: relative;
+  list-style: none;
+}
+#top-bar .nav-cell {
+  position: relative;
+  padding: 0;
+  border-radius: 5px;
+  margin: 2px 0 0;
+  float: left;
+  list-style: none;
+  display: inline-block;
+  overflow: hidden;
+}
+#top-bar .nav-cell a {
+  padding: 0 15px;
+  text-decoration: none;
+  text-align: center;
+  position: relative;
+  display: inline-block;
+  float: left;
+  color: #333;
+  line-height: 30px;
+  text-transform: uppercase;
+  font-size: 13px;
+  letter-spacing: .5px;
+  font-weight: 500;
+  margin: 0;
+  outline: 0;
+  cursor: pointer;
+  background-color: transparent;
+  font-family: Roboto,Helvetica Neue,Helvetica,Arial,sans-serif;
+  font-weight: 500;
+  transition: all .3s;
+}
+#top-bar .nav-cell.active a {
+  background: #b73b16;
+  color: #fff;
+}
+#top-bar .nav-cell:hover {
+  text-decoration: none;
+  background-color: #f6f9fc;
+}
+#top-bar .nav-cell+.nav-cell {
+  margin-left: 10px;
+}

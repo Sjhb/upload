@@ -11,6 +11,7 @@ const repSpacePath = path.resolve(__dirname, '..', 'repositories')
 const appendFile = util.promisify(fs.appendFile)
 const writeFile = util.promisify(fs.writeFile)
 
+
 // 获取仓库配置信息
 function getRepConfig () {
   const repositories = fs.readFileSync(path.resolve(__dirname, '..', 'repConfig', 'repository.json')).toString()
